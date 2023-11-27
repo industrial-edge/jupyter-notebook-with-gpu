@@ -1,0 +1,30 @@
+# Copyright (c) 2023 Siemens AG
+# This file is subject to the terms and conditions of the MIT License.
+# See LICENSE file(s) in the top-level directory.
+
+# Sample docker-compose file for using Nvidia GPUs on Industrial Edge
+
+version: '2.4'
+services:
+  tensorflow-jupyter-demo-app:
+    environment:
+      - TF_FORCE_GPU_ALLOW_GROWTH=true # needed for MIG mode to work on MIG-capable GPUs
+
+    image: tensorflow/tensorflow:2.14.0-gpu-jupyter
+
+    command: '/bin/bash -c "jupyter notebook --notebook-dir=/tf --ip 0.0.0.0 --no-browser --allow-root --NotebookApp.base_url=/tensorflow-jupyter-demo-app --NotebookApp.token=\"\" --NotebookApp.password=\"\" > /tf/publish/jupyter-console.log 2>&1"'
+
+    runtime: iedge
+
+    x-resources:
+      limits:
+        nvidia.com/gpu: 1
+ 
+    labels:
+      com_mwp_conf_nginx: '[{"name":"tensorflow-jupyter-demo-app","protocol":"HTTP","port":"8888","headers":"","rewriteTarget":"/tensorflow-jupyter-demo-app"}]'
+
+    mem_limit: 8192mb
+
+    volumes:
+      - ./publish/:/tf/publish/
+      - ./cfg-data/:/tf/cfg-data/

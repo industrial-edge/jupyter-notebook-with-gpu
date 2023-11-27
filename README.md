@@ -1,128 +1,168 @@
-# Writing good how-to or tutorial
+<!-- Exclude from ToC -->
+<h1>Jupyter Notebook with GPU</h1>
 
-Before you start writing, read the following materials how to write good documentation (including how-tos).
+<!-- Exclude from ToC -->
+<h2>Table of Contents</h2>
 
-* [Google Developer style guide](https://developers.google.com/style)
-* [Technical writing Courses](https://developers.google.com/tech-writing)
-* [Microsoft Writing Style Guide](https://docs.microsoft.com/cs-cz/style-guide/welcome/)
+[[_TOC_]]
 
-Then decide: Are you writing a tutorial or a how-to guide?
-
-[Divio](https://documentation.divio.com/) explains the difference  (Note that this applies for software documentation for application developers)
-
-* Tutorials are lessons that take the reader by the hand through a series of steps to complete a project of some kind. They are what your project needs in order to show a beginner that they can achieve something with it. https://documentation.divio.com/tutorials/
-* How-to guides take the reader through the steps required to solve a real-world problem
-
-Each have a different writing style. Tutorials must be bullet proof (no unexpected behavior) https://documentation.divio.com/how-to-guides/
-
-Note: Try to write the tutorials and how-tos as a standalone html page, ready to be generated using Static site generator [MkDocs](https://www.mkdocs.org/). When referencing code examples or files, use the full URL of the git repository. We want to reuse these how-tos and tutorials in Documentation website.
-
-Don't explain concepts. [It gets in a way of action](https://documentation.divio.com/how-to-guides/#don-t-explain-concepts).  
-
-Don't use HTML tags unless working with videos. And try to avoid using videos unless absolutely necessary. Don't upload videos to Git repository.
-
-Bellow you can find the structure of IE tow-to/tutorial
-
-- [Writing good how-to or tutorial](#writing-good-how-to-or-tutorial)
-  - [Description](#description)
-    - [Overview](#overview)
-    - [General Task](#general-task)
-  - [Requirements](#requirements)
-    - [Prerequisites](#prerequisites)
-    - [Used components](#used-components)
-  - [Installation](#installation)
-  - [Usage](#usage)
-  - [Documentation](#documentation)
-  - [Contribution](#contribution)
-  - [License and Legal Information](#license-and-legal-information)
-  - [Disclaimer](#disclaimer)
-    
 ## Description
 
-### Overview
-
-Why has been this how-to/tutorial created? What is the purpose?
-
-### General Task
-
-What is the general goal/task of this how-to/tutorial?
-
-![task](docs/graphics/how-to-architecture-template.png)
-
-PowerPoint template for architecture picture [download here](https://siemens.sharepoint.com/:p:/r/teams/EdgeTeam/Shared%20Documents/Quality%20gate/23_GitHub_HowTos/Architecture_Template.pptx?d=w0c8853c9bfdc4552adaddc2a7cabcda6&csf=1&web=1&e=3DBrgw).
-
-Save created architecture PowerPoint slides as separate file [here](https://siemens.sharepoint.com/teams/EdgeTeam-Discussion/Shared%20Documents/Forms/AllItems.aspx?RootFolder=%2Fteams%2FEdgeTeam%2DDiscussion%2FShared%20Documents%2FQuality%20Gate%20HQ%2FQuality%20Gate%20EU%2F23%5FGitHub%5FHowTos&FolderCTID=0x012000002421829443F54BAB033C81F598C9AD) for later updates and use.
+This tutorial demonstrates the use of Nvidia GPUs for machine learning on Industrial Edge.
+In particular, it shows how to turn an official [TensorFlow](https://www.tensorflow.org) container with [Jupyter notebook server](https://jupyter.org/) into a GPU-accelerated app.
+For introductory material and guidance on creating own Industrial Edge apps, please see the [documentation for app developers](https://docs.eu1.edge.siemens.cloud/develop_an_application/index.html).
 
 ## Requirements
 
 ### Prerequisites
 
-What are the requirements on the user knowledge, HW components before starting the how-to?
+- Nvidia GPU [compatible with Nvidia's OSS drivers](https://github.com/NVIDIA/open-gpu-kernel-modules#compatible-gpus)
 
-### Used components
+### Used Components
 
-List the used software and hardware components that were tested with this how-to.
-Add the used components here (e.g.)
-
-* Industrial Edge App Publisher V1.0.8
-* Docker Engine 18.09.6
-* Docker Compose V2.4
-* S7 Connector V 1.0.22
-* S7 Connector Configurator V 1.0.9
-* Industrial Edge Device V 1.0.0-34
-* TIA Portal V16
-* PLC: CPU 1511 FW 2.8.3
-
-## Installation
-
-How to install/run this application example? (i.e. how to deploy it to Industrial Edge device?) How to build this application? How to set up configurations in IE?
-
-To keep the readme.md file as short as possible please add more detailed information in the docs folder.
-
-* [Build application](docs/Installation.md#build-application)
-
-## Usage
-
-When the app is installed, how can I use it? Usually some basic UI description to prove that the app is working correctly.
+- Industrial Edge App Publisher (IEAP) v1.13.5
+- Industrial Edge Device Kit (IEDK) v1.16.0-4
+- Industrial Edge Device with [GPU support being enabled](https://docs.eu1.edge.siemens.cloud/build_a_device/device_building/development/configuration/capabilitiesjson.html#hostresourcemanager)
 
 ## Documentation
 
-Add links to documentation. Either on external URL or in the doc folder. Please use always link to a file not to a directory (it doesn't work with static site generator engines).
+### Using a Stock Container
 
-Add these links:
+Let us use a stock TensorFlow container that automatically starts the Jupyter notebook server.
+The image is `tensorflow/tensorflow:2.14.0-gpu-jupyter`.
+It contains all necessary Nvidia support libraries.
+Hence, we have as a minimal Docker Compose file:
 
-You can find further documentation and help in the following links
+```yaml
+version: '2.4'
+services:
+  tensorflow-jupyter-demo-app:
+    image: tensorflow/tensorflow:2.14.0-gpu-jupyter
 
-* [Industrial Edge Hub](https://iehub.eu1.edge.siemens.cloud/#/documentation)
-* [Industrial Edge Forum](https://forum.industrial-edge.siemens.cloud)
-* [Industrial Edge Documentation](https://docs.industrial-edge.siemens.cloud/)
-* [Industrial Edge landing page](https://new.siemens.com/global/en/products/automation/topic-areas/industrial-edge/simatic-edge.html)
-* [Industrial Edge GitHub page](https://github.com/industrial-edge)
+    mem_limit: 8192mb
+```
+
+However, this will not yet grant GPU access to the app as Docker containers cannot access GPUs out-of-the-box.
+
+> [!IMPORTANT]
+> Industrial Edge requires a `mem_limit` to be specified.
+> If the memory consumption exceeds the limit during runtime, the app is stopped.
+> As TensorFlow is very memory-hungry, we use a rather large amount of memory.
+
+### Enabling GPU Access
+
+To enable GPU acceleration, we need to provide GPU access to the `tensorflow-jupyter-demo-app` service by means of Industrial Edge's [Resource Manager](https://docs.eu1.edge.siemens.cloud/develop_an_application/developer_guide/resource_manager/06_index.html).
+This is accomplished with an `x-resources:limits` entry under the service.
+Specifying `nvidia.com/gpu: 1` will claim one Nvidia GPU for exclusive use by this container.
+Generally, one can claim an arbitrary number of resources.
+
+> [!NOTE]
+> Device names or numbers are not hardcoded, just the number of resources of a specific resource class needs to be given.
+> Which device is actually mapped into the container is decided by the resource manager.
+
+Do not forget the `runtime: iedge` entry so that the extension field `x-resources` is handled correctly.
+If `runtime: iedge` is missing, the resource claim is ignored, and no GPU is allocated.
+
+```yaml
+version: '2.4'
+services:
+  tensorflow-jupyter-demo-app:
+    image: tensorflow/tensorflow:2.14.0-gpu-jupyter
+
+    runtime: iedge
+
+    x-resources:
+      limits:
+        nvidia.com/gpu: 1
+
+    mem_limit: 8192mb
+```
+
+### Adding Options for Industrial Edge
+
+To turn the TensorFlow-Jupyter image into an Industrial Edge app, a few specific tweaks are needed:
+
+- By default, Jupyter starts up with a random token which needs to be specified in the URL.
+This needs to be turned off by overriding the initial 'command' (we use command line arguments `--NotebookApp.token="" --NotebookApp.password=""`).
+- We need an nginx config so that upon icon click, the Jupyter web page (under default port 8888) is opened:
+`[{"name":"tensorflow-jupyter-demo-app","protocol":"HTTP","port":"8888","headers":"","rewriteTarget":"/tensorflow-jupyter-demo-app"}]`.
+This makes the app available under URL prefix `tensorflow-jupyter-demo-app`, i.e., the Jupyter app is accessed under `http://<ied-url>/tensorflow-jupyter-demo-app`.
+At the same time, we need to tell Jupyter to use this URL as root, so that the Jupyter notebook works correctly (`--NotebookApp.base_url=/tensorflow-jupyter-demo-app `).
+- Moreover, we make the standard volumes `publish` and `cfg-data` available so that Jupyter notebooks can access them.
+These are needed to get files into and out of the container and to have persistent storage.
+
+Finally, we obtain the following Docker Compose file:
+
+```yaml
+version: '2.4'
+services:
+  tensorflow-jupyter-demo-app:
+    image: tensorflow/tensorflow:2.14.0-gpu-jupyter
+
+    command: '/bin/bash -c "jupyter notebook --notebook-dir=/tf --ip 0.0.0.0 --no-browser --allow-root --NotebookApp.base_url=/tensorflow-jupyter-demo-app --NotebookApp.token=\"\" --NotebookApp.password=\"\" > /tf/publish/jupyter-console.log 2>&1"'
+
+    runtime: iedge
+
+    x-resources:
+      limits:
+        nvidia.com/gpu: 1
+ 
+    labels:
+      com_mwp_conf_nginx: '[{"name":"tensorflow-jupyter-demo-app","protocol":"HTTP","port":"8888","headers":"","rewriteTarget":"/tensorflow-jupyter-demo-app"}]'
+
+    mem_limit: 8192mb
+
+    volumes:
+      - ./publish/:/tf/publish/
+      - ./cfg-data/:/tf/cfg-data/
+```
+
+### Running the App
+
+From the IEM, install the app onto an IED equipped with a GPU and the Industrial Edge Resource being available.
+
+> [!NOTE]
+> Before installation, make sure that the GPU is not occupied by another app.
+> The installation will fail if the app cannot be started, and the app will not start if it cannot claim a GPU.
+
+Upon successful installation, click on the app.
+The app should be running and the Jupyter file browser should open in a new browser window.
+
+![Jupyter file browser](docs/graphics/jupyter.png "Jupyter file browser")
+
+> [!NOTE]
+> `/tensorflow-tutorials` contains demo notebooks.
+> These can be opened and executed.
+> Only notebooks saved in the `/publish` directory will be persistent.
+> All other files will be deleted when the app is restarted.
+> Save important work under `/publish`.
+
+GPU presence can be tested with `print(tfconfig.list_physical_devices('GPU'))` or `print(device_lib.list_local_devices())` in a freshly opened Jupyter notebook (-> New -> "Python 3")
+
+![GPU Test](docs/graphics/gputest.png "GPU Test")
 
 ## Contribution
 
-Thank you for your interest in contributing. Anybody is free to report bugs, unclear documentation, and other problems regarding this repository in the Issues section.
-Additionally everybody is free to propose any changes to this repository using Pull Requests.
+Thank you for your interest in contributing.
+Please report bugs, unclear documentation, and other problems regarding this repository in the Issues section.
+Additionally, feel free to propose any changes to this repository using Pull Requests.
 
-If you haven't previously signed the [Siemens Contributor License Agreement](https://cla-assistant.io/industrial-edge/) (CLA), the system will automatically prompt you to do so when you submit your Pull Request. This can be conveniently done through the CLA Assistant's online platform.
+If you haven't previously signed the [Siemens Contributor License Agreement](https://cla-assistant.io/industrial-edge/) (CLA), the system will automatically prompt you to do so when you submit your Pull Request.
+This can be conveniently done through the CLA Assistant's online platform.
 Once the CLA is signed, your Pull Request will automatically be cleared and made ready for merging if all other test stages succeed.
 
 ## License and Legal Information
 
 Please read the [Legal information](LICENSE.txt).
 
-```
-TO BE DELETED: Depending on the content of your repository either choose the
-- LICENSE.md (In case no Source code is included) or the
-- LICENSE.txt file (Source Code is included)
-```
-
 ## Disclaimer
-
-```
-Please add this Disclaimer in case your repository contains a Dockerfile otherwise you can remove the whole section
-```
 
 IMPORTANT - PLEASE READ CAREFULLY:
 
-This documentation describes how you can download and set up containers which consist of or contain third-party software. By following this documentation you agree that using such third-party software is done at your own discretion and risk. No advice or information, whether oral or written, obtained by you from us or from this documentation shall create any warranty for the third-party software. Additionally, by following these descriptions or using the contents of this documentation, you agree that you are responsible for complying with all third party licenses applicable to such third-party software. All product names, logos, and brands are property of their respective owners. All third-party company, product and service names used in this documentation are for identification purposes only. Use of these names, logos, and brands does not imply endorsement.
+This documentation describes how you can download and set up containers which consist of or contain third-party software.
+By following this documentation, you agree that using such third-party software is done at your own discretion and risk.
+No advice or information, whether oral or written, obtained by you from us or from this documentation shall create any warranty for the third-party software.
+Additionally, by following these descriptions or using the contents of this documentation, you agree that you are responsible for complying with all third-party licenses applicable to such third-party software.
+All product names, logos, and brands are property of their respective owners.
+All third-party company, product, and service names used in this documentation are for identification purposes only.
+Use of these names, logos, and brands does not imply endorsement.
