@@ -1,10 +1,19 @@
-<!-- Exclude from ToC -->
-<h1>Jupyter Notebook with GPU</h1>
+# Jupyter Notebook with GPU <!-- omit from toc -->
 
-<!-- Exclude from ToC -->
-<h2>Table of Contents</h2>
+## Table of Contents <!-- omit from toc -->
 
-[[_TOC_]]
+- [Description](#description)
+- [Requirements](#requirements)
+  - [Prerequisites](#prerequisites)
+  - [Used Components](#used-components)
+- [Documentation](#documentation)
+  - [Using a Stock Container](#using-a-stock-container)
+  - [Enabling GPU Access](#enabling-gpu-access)
+  - [Adding Options for Industrial Edge](#adding-options-for-industrial-edge)
+  - [Running the App](#running-the-app)
+- [Contribution](#contribution)
+- [License and Legal Information](#license-and-legal-information)
+- [Disclaimer](#disclaimer)
 
 ## Description
 
