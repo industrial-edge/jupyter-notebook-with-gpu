@@ -100,7 +100,7 @@ At the same time, we need to tell Jupyter to use this URL as root, so that the J
 - Moreover, we make the standard volumes `publish` and `cfg-data` available so that Jupyter notebooks can access them.
 These are needed to get files into and out of the container and to have persistent storage.
 
-Finally, we obtain the following Docker Compose file:
+Finally, we obtain the following Docker Compose file (see [docker-compose.example.yml](./docker-compose.example.yml)):
 
 ```yaml
 version: '2.4'
