@@ -126,6 +126,55 @@ services:
       - ./cfg-data/:/tf/cfg-data/
 ```
 
+### Create and upload the Industrial Edge App
+
+One option to turn a docker-compose file into an Industrial Edge Application is to use the Industrial Edge App Publisher program:
+
+1. Open the Industrial Edge App Publisher.
+2. Ensure a workspace folder is seleced which has several GB of free disk space available.
+3. Make sure a Docker engine is connected. Most users will have a local docker engine running.
+  
+   ![Docker settings](docs/graphics/docker.png "Docker settings")
+  
+   > **Note:**
+   > Within Windows Docker Desktop needs to check "Expose daemon on tcp://localhost:2375 without TLS".
+
+4. Connect to the IEM, via "Go Online" in App Publisher. For this the IEM url as well as credentials are needed. 
+   Upon success, this will list the App Projects on this IEM on the bottom of the page.
+   
+5. Create a new application, with "+ Create Application" button. This will redirect to the IEM web page where 
+   the new app parameters can be specified.
+
+   > **Note:**
+   > It is necessary to select a proper App Project first within which the new applicaton will be created.
+   > If there is no App Project yet, one needs to be created first.
+
+   ![Create Application](docs/graphics/createapp.png "Create application")
+
+6. Create Application Version. This is to add the actual code of the application. 
+
+   1. Within the App Publisher (one might need to click the reload button to see the newly created app)
+      go to the list of app versions by clicking on the app icon. 
+   2. Click "+ Add New Version"
+   3. Select the docker-compose version
+   4. Click "Import YAML" and select the docker-compose.yaml file. 
+   5. Edit the docker-compose (by clicking the pen symbol), select "Storage" and delete the duplicate entries `/publish` and `/cfg-data` (keep the `/tf/publish` and `/td/cfg-data` mounts).
+   6. Hit "Review". This will lead to the review page showing the final docker-compose for the application:
+   
+      ![Create Application Version](docs/graphics/appversion.png "Create Application Version")
+   
+   7. Click on "Validate & Create"
+   8. Choose a proper app version number and click "Create". This pulls the docker 
+      image in the background and assembles the Industrial Edge Application version on the local computer. This may take some time and requires
+	  several GB of free disk space in the workspace folder.
+	  
+      > **Note:**
+      > Sometimes it is helpful to issue a `docker pull tensorflow/tensorflow:2.14.0-gpu-jupyter` before this operation
+	  > to make sure the docker image is locally available.
+
+7. Upload Application to IEM. This will may some time depending on the network connectivity of both the local machine and the IEM.
+
+
 ### Running the App
 
 From the IEM, install the app onto an IED equipped with a GPU and the Industrial Edge Resource being available.
