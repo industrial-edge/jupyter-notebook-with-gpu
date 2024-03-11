@@ -45,7 +45,7 @@ Hence, we have as a minimal Docker Compose file:
 ```yaml
 version: '2.4'
 services:
-  tensorflow-jupyter-demo-app:
+  jupyter-notebook-with-gpu:
     image: tensorflow/tensorflow:2.14.0-gpu-jupyter
 
     mem_limit: 8192mb
@@ -60,7 +60,7 @@ However, this will not yet grant GPU access to the app as Docker containers cann
 
 ### Enabling GPU Access
 
-To enable GPU acceleration, we need to provide GPU access to the `tensorflow-jupyter-demo-app` service by means of Industrial Edge's [Resource Manager](https://docs.eu1.edge.siemens.cloud/develop_an_application/developer_guide/resource_manager/06_index.html).
+To enable GPU acceleration, we need to provide GPU access to the `jupyter-notebook-with-gpu` service by means of Industrial Edge's [Resource Manager](https://docs.eu1.edge.siemens.cloud/develop_an_application/developer_guide/resource_manager/06_index.html).
 This is accomplished with an `x-resources:limits` entry under the service.
 Specifying `nvidia.com/gpu: 1` will claim one Nvidia GPU for exclusive use by this container.
 Generally, one can claim an arbitrary number of resources.
@@ -75,7 +75,7 @@ If `runtime: iedge` is missing, the resource claim is ignored, and no GPU is all
 ```yaml
 version: '2.4'
 services:
-  tensorflow-jupyter-demo-app:
+  jupyter-notebook-with-gpu:
     image: tensorflow/tensorflow:2.14.0-gpu-jupyter
 
     runtime: iedge
@@ -94,9 +94,9 @@ To turn the TensorFlow-Jupyter image into an Industrial Edge app, a few specific
 - By default, Jupyter starts up with a random token which needs to be specified in the URL.
 This needs to be turned off by overriding the initial 'command' (we use command line arguments `--NotebookApp.token="" --NotebookApp.password=""`).
 - We need an nginx config so that upon icon click, the Jupyter web page (under default port 8888) is opened:
-`[{"name":"tensorflow-jupyter-demo-app","protocol":"HTTP","port":"8888","headers":"","rewriteTarget":"/tensorflow-jupyter-demo-app"}]`.
-This makes the app available under URL prefix `tensorflow-jupyter-demo-app`, i.e., the Jupyter app is accessed under `http://<ied-url>/tensorflow-jupyter-demo-app`.
-At the same time, we need to tell Jupyter to use this URL as root, so that the Jupyter notebook works correctly (`--NotebookApp.base_url=/tensorflow-jupyter-demo-app `).
+`[{"name":"jupyter-notebook-with-gpu","protocol":"HTTP","port":"8888","headers":"","rewriteTarget":"/jupyter-notebook-with-gpu"}]`.
+This makes the app available under URL prefix `tensorflow-jupyter-demo-app`, i.e., the Jupyter app is accessed under `http://<ied-url>/jupyter-notebook-with-gpu`.
+At the same time, we need to tell Jupyter to use this URL as root, so that the Jupyter notebook works correctly (`--NotebookApp.base_url=/jupyter-notebook-with-gpu`).
 - Moreover, we make the standard volumes `publish` and `cfg-data` available so that Jupyter notebooks can access them.
 These are needed to get files into and out of the container and to have persistent storage.
 
@@ -105,10 +105,10 @@ Finally, we obtain the following Docker Compose file (see [docker-compose.exampl
 ```yaml
 version: '2.4'
 services:
-  tensorflow-jupyter-demo-app:
+  jupyter-notebook-with-gpu:
     image: tensorflow/tensorflow:2.14.0-gpu-jupyter
 
-    command: '/bin/bash -c "jupyter notebook --notebook-dir=/tf --ip 0.0.0.0 --no-browser --allow-root --NotebookApp.base_url=/tensorflow-jupyter-demo-app --NotebookApp.token=\"\" --NotebookApp.password=\"\" > /tf/publish/jupyter-console.log 2>&1"'
+    command: '/bin/bash -c "jupyter notebook --notebook-dir=/tf --ip 0.0.0.0 --no-browser --allow-root --NotebookApp.allow_origin=* --NotebookApp.base_url=/jupyter-notebook-with-gpu --NotebookApp.token=\"\" --NotebookApp.password=\"\" > /tf/publish/jupyter-console.log 2>&1"'
 
     runtime: iedge
 
@@ -117,7 +117,7 @@ services:
         nvidia.com/gpu: 1
  
     labels:
-      com_mwp_conf_nginx: '[{"name":"tensorflow-jupyter-demo-app","protocol":"HTTP","port":"8888","headers":"","rewriteTarget":"/tensorflow-jupyter-demo-app"}]'
+      com_mwp_conf_nginx: '[{"name":"jupyter-notebook-with-gpu","protocol":"HTTP","port":"8888","headers":"","rewriteTarget":"/jupyter-notebook-with-gpu"}]'
 
     mem_limit: 8192mb
 
