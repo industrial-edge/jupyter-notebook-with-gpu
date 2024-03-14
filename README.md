@@ -137,8 +137,8 @@ One option to turn a Docker Compose file into an app is to use the Industrial Ed
 
    ![Docker settings](docs/graphics/docker.png "Docker settings")
 
-  > [!NOTE]
-  > Within Windows Docker Desktop, one needs to check "Expose daemon on tcp://localhost:2375 without TLS".
+> [!NOTE]
+> Within Windows Docker Desktop, one needs to check "Expose daemon on tcp://localhost:2375 without TLS".
 
 4. Connect to the IEM via "Go Online" in IEAP.
    For this, the IEM URL as well as credentials are needed.
@@ -147,9 +147,9 @@ One option to turn a Docker Compose file into an app is to use the Industrial Ed
 5. Create a new application with the "+ Create Application" button.
    This will redirect you to the IEM web page where the new app parameters can be specified.
 
-   > [!NOTE]
-   > It is necessary to select a proper App Project first within which the new applicaton will be created.
-   > If there is no App Project yet, one needs to be created.
+> [!NOTE]
+> It is necessary to select a proper App Project first within which the new applicaton will be created.
+> If there is no App Project yet, one needs to be created.
 
    ![Create Application](docs/graphics/createapp.png "Create application")
 
@@ -169,8 +169,8 @@ One option to turn a Docker Compose file into an app is to use the Industrial Ed
       This pulls the docker image in the background and assembles the Industrial Edge application version on the local computer.
       This may take some time and requires several GB of free disk space in the workspace folder.
 
-      > [!NOTE]
-      > Sometimes, it is helpful to issue `docker pull tensorflow/tensorflow:2.14.0-gpu-jupyter` before this operation to make sure the Docker image is available locally.
+> [!NOTE]
+> Sometimes, it is helpful to issue `docker pull tensorflow/tensorflow:2.14.0-gpu-jupyter` before this operation to make sure the Docker image is available locally.
 
 7. Upload the application to the IEM.
    This may take some time depending on the network connectivity of both the local machine and the IEM.
