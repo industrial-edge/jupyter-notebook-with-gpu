@@ -147,11 +147,11 @@ One option to turn a Docker Compose file into an app is to use the Industrial Ed
 5. Create a new application with the "+ Create Application" button.
    This will redirect you to the IEM web page where the new app parameters can be specified.
 
+   ![Create Application](docs/graphics/createapp.png "Create application")
+
 > [!NOTE]
 > It is necessary to select a proper App Project first within which the new applicaton will be created.
 > If there is no App Project yet, one needs to be created.
-
-   ![Create Application](docs/graphics/createapp.png "Create application")
 
 6. Create application version. This is to add the actual code of the application.
 
