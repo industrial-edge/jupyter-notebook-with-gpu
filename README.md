@@ -10,6 +10,7 @@
   - [Using a Stock Container](#using-a-stock-container)
   - [Enabling GPU Access](#enabling-gpu-access)
   - [Adding Options for Industrial Edge](#adding-options-for-industrial-edge)
+  - [Creating and Uploading the App](#creating-and-uploading-the-app)
   - [Running the App](#running-the-app)
 - [Contribution](#contribution)
 - [License and Legal Information](#license-and-legal-information)
@@ -66,8 +67,8 @@ Specifying `nvidia.com/gpu: 1` will claim one Nvidia GPU for exclusive use by th
 Generally, one can claim an arbitrary number of resources.
 
 > [!NOTE]
-> Device names or numbers are not hardcoded, just the number of resources of a specific resource class needs to be given.
-> Which device is actually mapped into the container is decided by the resource manager.
+> Device names or numbers are not hardcoded, just the number of resource instances of a specific resource class needs to be given.
+> Which instances (devices) are actually mapped into the container is decided by the Resource Manager.
 
 Do not forget the `runtime: iedge` entry so that the extension field `x-resources` is handled correctly.
 If `runtime: iedge` is missing, the resource claim is ignored, and no GPU is allocated.
@@ -91,8 +92,8 @@ services:
 
 To turn the TensorFlow-Jupyter image into an Industrial Edge app, a few specific tweaks are needed:
 
-- By default, Jupyter starts up with a random token which needs to be specified in the URL.
-This needs to be turned off by overriding the initial 'command' (we use command line arguments `--NotebookApp.token="" --NotebookApp.password=""`).
+- By default, Jupyter starts up with a random token which must be specified in the URL.
+This needs to be turned off by overriding the initial `command` (we use command line arguments `--NotebookApp.token="" --NotebookApp.password=""`).
 - We need an nginx config so that upon icon click, the Jupyter web page (under default port 8888) is opened:
 `[{"name":"jupyter-notebook-with-gpu","protocol":"HTTP","port":"8888","headers":"","rewriteTarget":"/jupyter-notebook-with-gpu"}]`.
 This makes the app available under URL prefix `tensorflow-jupyter-demo-app`, i.e., the Jupyter app is accessed under `http://<ied-url>/jupyter-notebook-with-gpu`.
@@ -115,7 +116,7 @@ services:
     x-resources:
       limits:
         nvidia.com/gpu: 1
- 
+
     labels:
       com_mwp_conf_nginx: '[{"name":"jupyter-notebook-with-gpu","protocol":"HTTP","port":"8888","headers":"","rewriteTarget":"/jupyter-notebook-with-gpu"}]'
 
@@ -126,54 +127,53 @@ services:
       - ./cfg-data/:/tf/cfg-data/
 ```
 
-### Create and upload the Industrial Edge App
+### Creating and Uploading the App
 
-One option to turn a docker-compose file into an Industrial Edge Application is to use the Industrial Edge App Publisher program:
+One option to turn a Docker Compose file into an app is to use the Industrial Edge App Publisher (IEAP):
 
-1. Open the Industrial Edge App Publisher.
-2. Ensure a workspace folder is seleced which has several GB of free disk space available.
-3. Make sure a Docker engine is connected. Most users will have a local docker engine running.
-  
+1. Open IEAP.
+2. Ensure a workspace folder is seleced with several GB of free disk space.
+3. Make sure a Docker engine is connected. Most users will have a local Docker engine running.
+
    ![Docker settings](docs/graphics/docker.png "Docker settings")
-  
-   > **Note:**
-   > Within Windows Docker Desktop needs to check "Expose daemon on tcp://localhost:2375 without TLS".
 
-4. Connect to the IEM, via "Go Online" in App Publisher. For this the IEM url as well as credentials are needed. 
-   Upon success, this will list the App Projects on this IEM on the bottom of the page.
-   
-5. Create a new application, with "+ Create Application" button. This will redirect to the IEM web page where 
-   the new app parameters can be specified.
+  > [!NOTE]
+  > Within Windows Docker Desktop, one needs to check "Expose daemon on tcp://localhost:2375 without TLS".
 
-   > **Note:**
+4. Connect to the IEM via "Go Online" in IEAP.
+   For this, the IEM URL as well as credentials are needed.
+   Upon success, the App Projects on the IEM are listed at the bottom of the page.
+
+5. Create a new application with the "+ Create Application" button.
+   This will redirect you to the IEM web page where the new app parameters can be specified.
+
+   > [!NOTE]
    > It is necessary to select a proper App Project first within which the new applicaton will be created.
-   > If there is no App Project yet, one needs to be created first.
+   > If there is no App Project yet, one needs to be created.
 
    ![Create Application](docs/graphics/createapp.png "Create application")
 
-6. Create Application Version. This is to add the actual code of the application. 
+6. Create application version. This is to add the actual code of the application.
 
-   1. Within the App Publisher (one might need to click the reload button to see the newly created app)
-      go to the list of app versions by clicking on the app icon. 
-   2. Click "+ Add New Version"
-   3. Select the docker-compose version
-   4. Click "Import YAML" and select the docker-compose.yaml file. 
-   5. Edit the docker-compose (by clicking the pen symbol), select "Storage" and delete the duplicate entries `/publish` and `/cfg-data` (keep the `/tf/publish` and `/td/cfg-data` mounts).
-   6. Hit "Review". This will lead to the review page showing the final docker-compose for the application:
-   
+   1. Within IEAP (one might need to click the reload button to see the newly created app), go to the list of app versions by clicking on the app icon.
+   2. Click "+ Add New Version".
+   3. Select the Docker Compose version.
+   4. Click "Import YAML" and select the docker-compose.yaml file.
+   5. Edit the Docker Compose file (by clicking the pen symbol), select "Storage" and delete the duplicate entries `/publish` and `/cfg-data` (keep the `/tf/publish` and `/td/cfg-data` mounts).
+   6. Click "Review". This will lead you to the review page showing the final Docker Compose file for the application:
+
       ![Create Application Version](docs/graphics/appversion.png "Create Application Version")
-   
-   7. Click on "Validate & Create"
-   8. Choose a proper app version number and click "Create". This pulls the docker 
-      image in the background and assembles the Industrial Edge Application version on the local computer. This may take some time and requires
-	  several GB of free disk space in the workspace folder.
-	  
-      > **Note:**
-      > Sometimes it is helpful to issue a `docker pull tensorflow/tensorflow:2.14.0-gpu-jupyter` before this operation
-	  > to make sure the docker image is locally available.
 
-7. Upload Application to IEM. This will may some time depending on the network connectivity of both the local machine and the IEM.
+   7. Click on "Validate & Create".
+   8. Choose a proper app version number and click "Create".
+      This pulls the docker image in the background and assembles the Industrial Edge application version on the local computer.
+      This may take some time and requires several GB of free disk space in the workspace folder.
 
+      > [!NOTE]
+      > Sometimes, it is helpful to issue `docker pull tensorflow/tensorflow:2.14.0-gpu-jupyter` before this operation to make sure the Docker image is available locally.
+
+7. Upload the application to the IEM.
+   This may take some time depending on the network connectivity of both the local machine and the IEM.
 
 ### Running the App
 
